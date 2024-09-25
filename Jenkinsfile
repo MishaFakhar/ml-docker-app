@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     // Build Docker image from the Dockerfile
-                    bat 'docker build -t ${DOCKER_IMAGE} .'
+                    bat 'docker build -t %DOCKER_IMAGE% .'
                 }
             }
         }
@@ -32,7 +32,7 @@ pipeline {
                         bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
                     }
                     // Push Docker image to Docker Hub
-                    bat 'docker push ${DOCKER_IMAGE}'
+                    bat 'docker push %DOCKER_IMAGE%'
                 }
             }
         }
@@ -41,7 +41,7 @@ pipeline {
     post {
         always {
             // Cleanup Docker images after pushing
-            bat 'docker rmi ${DOCKER_IMAGE} || true'
+            bat 'docker rmi %DOCKER_IMAGE% || exit 0'  // Ensure it continues even if the image doesn't exist
             cleanWs()  // Clean up workspace after the build
         }
     }
