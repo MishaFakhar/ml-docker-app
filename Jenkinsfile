@@ -5,12 +5,13 @@ pipeline {
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Change this to your Jenkins credentials ID
         DOCKER_IMAGE = 'mishafakhar1t/ml-docker-app'
         DOCKER_REGISTRY = 'docker.io'
+        DOCKER_CLIENT_TIMEOUT = '300' // Increase Docker client timeout
+        DOCKER_BUILD_TIMEOUT = '300'   // Increase Docker build timeout
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout code from GitHub repository
                 git branch: 'main', url: 'https://github.com/MishaFakhar/ml-docker-app.git'
             }
         }
@@ -18,7 +19,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build Docker image from the Dockerfile
                     bat 'docker build -t %DOCKER_IMAGE% .'
                 }
             }
@@ -27,11 +27,9 @@ pipeline {
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
-                    // Log in to Docker Hub using credentials from Jenkins
                     withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
                     }
-                    // Push Docker image to Docker Hub
                     bat 'docker push %DOCKER_IMAGE%'
                 }
             }
@@ -40,9 +38,8 @@ pipeline {
 
     post {
         always {
-            // Cleanup Docker images after pushing
-            bat 'docker rmi %DOCKER_IMAGE% || exit 0'  // Ensure it continues even if the image doesn't exist
-            cleanWs()  // Clean up workspace after the build
+            bat 'docker rmi %DOCKER_IMAGE% || exit 0'
+            cleanWs()
         }
     }
 }
